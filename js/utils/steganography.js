@@ -40,28 +40,43 @@ export function calculateEntropy(imageData) {
 }
 
 export function chiSquareTest(imageData) {
+  // Westfeld's Chi-Square Attack: Detects LSB steganography by comparing 
+  // frequencies of adjacent color values (Pairs of Values / PoVs).
   const data = imageData.data;
-  const observed = new Array(256).fill(0);
+  const freq = new Array(256).fill(0);
   
+  // Use LSB-sensitive frequency (grayscale or just green channel as a proxy)
   for (let i = 0; i < data.length; i += 4) {
-    const gray = Math.floor(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
-    observed[gray]++;
+    const val = data[i]; // Testing Red channel as a sample
+    freq[val]++;
   }
 
-  const total = data.length / 4;
-  const expected = total / 256;
   let chiSquare = 0;
+  let categories = 0;
 
-  for (let i = 0; i < 256; i++) {
-    const diff = observed[i] - expected;
-    chiSquare += (diff * diff) / expected;
+  for (let i = 0; i < 128; i++) {
+    const n1 = freq[2 * i];
+    const n2 = freq[2 * i + 1];
+    const expected = (n1 + n2) / 2;
+    
+    if (expected > 0) {
+      chiSquare += Math.pow(n1 - expected, 2) / expected;
+      categories++;
+    }
   }
 
-  // Convert to p-value approximation
-  const degreesOfFreedom = 255;
-  const pValue = 1 - Math.min(1, chiSquare / (2 * degreesOfFreedom));
+  if (categories === 0) return 0;
+
+  // Simple p-value approximation for steganographic probability
+  // A high p-value (close to 1) indicates high likelihood of hidden data 
+  // because it means the distributions of 2k and 2k+1 are unnaturally similar.
+  const dof = categories - 1;
+  const pValue = Math.min(1, chiSquare / (dof * 2));
   
-  return pValue;
+  // Invert because for Steg, we usually want high score = high suspicion
+  // but standard Chi-Square tests "uniformity". For LSB, we expect 
+  // unnaturally uniform distribution of bits.
+  return 1 - pValue;
 }
 
 export function extractLSBPlane(imageData, channel) {

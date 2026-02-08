@@ -16,6 +16,7 @@ export default class ResultsDisplay {
     `;
 
     this.attachTabListeners(container);
+    this.drawHistograms(container, results);
   }
 
   attachTabListeners(container) {
@@ -84,7 +85,9 @@ export default class ResultsDisplay {
 
         <div class="analysis-card">
           <div class="analysis-card-title">Color Distribution <button class="info-btn" data-key="colorDistribution">?</button></div>
-          <canvas id="histogram-${result.name}" width="300" height="150"></canvas>
+          <div class="histogram-wrapper">
+            <canvas id="histogram-${i}" width="300" height="150"></canvas>
+          </div>
         </div>
       </div>
     `;
@@ -112,5 +115,42 @@ export default class ResultsDisplay {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  drawHistograms(container, results) {
+    results.forEach((result, i) => {
+      const canvas = container.querySelector(`#histogram-${i}`);
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const { red, green, blue } = result.histogram;
+      const max = Math.max(...red, ...green, ...blue);
+      
+      const width = canvas.width;
+      const height = canvas.height;
+      const barWidth = width / 256;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const drawPath = (data, color) => {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.moveTo(0, height);
+        
+        for (let j = 0; j < 256; j++) {
+          const val = (data[j] / max) * height;
+          ctx.lineTo(j * barWidth, height - val);
+        }
+        
+        ctx.stroke();
+      };
+
+      ctx.globalAlpha = 0.8;
+      ctx.globalCompositeOperation = 'screen';
+      drawPath(red, '#ff6b6b');
+      drawPath(green, '#51cf66');
+      drawPath(blue, '#339af0');
+    });
   }
 }
