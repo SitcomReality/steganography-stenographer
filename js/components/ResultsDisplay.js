@@ -55,7 +55,7 @@ export default class ResultsDisplay {
         </div>
 
         <div class="analysis-card">
-          <div class="analysis-card-title">LSB Analysis</div>
+          <div class="analysis-card-title">LSB Analysis <button class="info-btn" data-key="lsbAnalysis">?</button></div>
           <div class="metric">
             <span class="metric-label">Red Channel</span>
             <span class="metric-value ${this.getStatus(result.lsbAnalysis.red)}">${result.lsbAnalysis.red.toFixed(2)}%</span>
@@ -73,17 +73,17 @@ export default class ResultsDisplay {
         <div class="analysis-card">
           <div class="analysis-card-title">Statistical Tests</div>
           <div class="metric">
-            <span class="metric-label">Entropy</span>
+            <span class="metric-label">Entropy <button class="info-btn" data-key="entropy">?</button></span>
             <span class="metric-value ${this.getEntropyStatus(result.entropy)}">${result.entropy.toFixed(4)}</span>
           </div>
           <div class="metric">
-            <span class="metric-label">Chi-Square</span>
+            <span class="metric-label">Chi-Square <button class="info-btn" data-key="chiSquare">?</button></span>
             <span class="metric-value ${this.getChiStatus(result.chiSquare)}">${result.chiSquare.toFixed(2)}</span>
           </div>
         </div>
 
         <div class="analysis-card">
-          <div class="analysis-card-title">Color Distribution</div>
+          <div class="analysis-card-title">Color Distribution <button class="info-btn" data-key="colorDistribution">?</button></div>
           <canvas id="histogram-${result.name}" width="300" height="150"></canvas>
         </div>
       </div>

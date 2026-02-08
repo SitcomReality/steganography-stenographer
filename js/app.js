@@ -1,6 +1,7 @@
 import ImageUploader from './components/ImageUploader.js';
 import AnalysisController from './components/AnalysisController.js';
 import ComparisonView from './components/ComparisonView.js';
+import TooltipSystem from './components/TooltipSystem.js';
 
 class App {
   constructor() {
@@ -9,6 +10,8 @@ class App {
   }
 
   init() {
+    this.tooltipSystem = new TooltipSystem();
+
     this.uploader = new ImageUploader(
       document.getElementById('upload-section'),
       this.handleImagesAdded.bind(this)

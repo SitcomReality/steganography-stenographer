@@ -30,7 +30,7 @@ export default class ComparisonView {
   renderSimilarities(similarities) {
     return `
       <div class="analysis-card">
-        <div class="analysis-card-title">Image Similarities</div>
+        <div class="analysis-card-title">Image Similarities <button class="info-btn" data-key="imageSimilarities">?</button></div>
         ${similarities.map(s => `
           <div class="metric">
             <span class="metric-label">${s.pair}</span>
@@ -46,11 +46,11 @@ export default class ComparisonView {
       <div class="analysis-card">
         <div class="analysis-card-title">Pattern Correlations</div>
         <div class="metric">
-          <span class="metric-label">Shared Patterns</span>
+          <span class="metric-label">Shared Patterns <button class="info-btn" data-key="sharedPatterns">?</button></span>
           <span class="metric-value">${correlations.sharedPatterns}</span>
         </div>
         <div class="metric">
-          <span class="metric-label">Correlation Score</span>
+          <span class="metric-label">Correlation Score <button class="info-btn" data-key="correlationScore">?</button></span>
           <span class="metric-value ${correlations.score > 0.7 ? 'suspicious' : 'normal'}">${correlations.score.toFixed(3)}</span>
         </div>
       </div>
