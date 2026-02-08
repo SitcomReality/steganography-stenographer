@@ -1,0 +1,116 @@
+export default class ResultsDisplay {
+  render(container, results) {
+    const tabs = results.map((r, i) => 
+      `<button class="tab ${i === 0 ? 'active' : ''}" data-index="${i}">${r.name}</button>`
+    ).join('');
+
+    const tabContents = results.map((r, i) => `
+      <div class="tab-content ${i === 0 ? 'active' : ''}" data-index="${i}">
+        ${this.renderAnalysis(r)}
+      </div>
+    `).join('');
+
+    container.innerHTML = `
+      <div class="tabs">${tabs}</div>
+      <div class="tab-contents">${tabContents}</div>
+    `;
+
+    this.attachTabListeners(container);
+  }
+
+  attachTabListeners(container) {
+    const tabs = container.querySelectorAll('.tab');
+    const contents = container.querySelectorAll('.tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const index = tab.dataset.index;
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        contents[index].classList.add('active');
+      });
+    });
+  }
+
+  renderAnalysis(result) {
+    return `
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <div class="analysis-card-title">Basic Info</div>
+          <div class="metric">
+            <span class="metric-label">Dimensions</span>
+            <span class="metric-value">${result.dimensions}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">File Size</span>
+            <span class="metric-value">${this.formatBytes(result.metadata.fileSize)}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Type</span>
+            <span class="metric-value">${result.metadata.fileType}</span>
+          </div>
+        </div>
+
+        <div class="analysis-card">
+          <div class="analysis-card-title">LSB Analysis</div>
+          <div class="metric">
+            <span class="metric-label">Red Channel</span>
+            <span class="metric-value ${this.getStatus(result.lsbAnalysis.red)}">${result.lsbAnalysis.red.toFixed(2)}%</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Green Channel</span>
+            <span class="metric-value ${this.getStatus(result.lsbAnalysis.green)}">${result.lsbAnalysis.green.toFixed(2)}%</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Blue Channel</span>
+            <span class="metric-value ${this.getStatus(result.lsbAnalysis.blue)}">${result.lsbAnalysis.blue.toFixed(2)}%</span>
+          </div>
+        </div>
+
+        <div class="analysis-card">
+          <div class="analysis-card-title">Statistical Tests</div>
+          <div class="metric">
+            <span class="metric-label">Entropy</span>
+            <span class="metric-value ${this.getEntropyStatus(result.entropy)}">${result.entropy.toFixed(4)}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Chi-Square</span>
+            <span class="metric-value ${this.getChiStatus(result.chiSquare)}">${result.chiSquare.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div class="analysis-card">
+          <div class="analysis-card-title">Color Distribution</div>
+          <canvas id="histogram-${result.name}" width="300" height="150"></canvas>
+        </div>
+      </div>
+    `;
+  }
+
+  getStatus(value) {
+    if (value > 52) return 'suspicious';
+    if (value > 48) return 'warning';
+    return 'normal';
+  }
+
+  getEntropyStatus(value) {
+    if (value > 7.8) return 'suspicious';
+    if (value > 7.5) return 'warning';
+    return 'normal';
+  }
+
+  getChiStatus(value) {
+    if (value < 0.01) return 'suspicious';
+    if (value < 0.05) return 'warning';
+    return 'normal';
+  }
+
+  formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+}
