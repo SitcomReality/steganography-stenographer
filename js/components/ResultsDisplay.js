@@ -6,7 +6,7 @@ export default class ResultsDisplay {
 
     const tabContents = results.map((r, i) => `
       <div class="tab-content ${i === 0 ? 'active' : ''}" data-index="${i}">
-        ${this.renderAnalysis(r)}
+        ${this.renderAnalysis(r, i)}
       </div>
     `).join('');
 
@@ -36,7 +36,7 @@ export default class ResultsDisplay {
     });
   }
 
-  renderAnalysis(result) {
+  renderAnalysis(result, i) {
     return `
       <div class="analysis-grid">
         <div class="analysis-card">
@@ -106,8 +106,9 @@ export default class ResultsDisplay {
   }
 
   getChiStatus(value) {
-    if (value < 0.01) return 'suspicious';
-    if (value < 0.05) return 'warning';
+    // value is (1 - pValue), so closer to 1 is more suspicious
+    if (value > 0.9) return 'suspicious';
+    if (value > 0.7) return 'warning';
     return 'normal';
   }
 
