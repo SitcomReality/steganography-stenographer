@@ -14,16 +14,21 @@ export default class ImageAnalyzer {
     ctx.drawImage(this.imageData.image, 0, 0);
 
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const histogram = ImgProc.generateHistogram(pixels);
 
     return {
       name: this.imageData.name,
       dimensions: `${this.imageData.width}×${this.imageData.height}`,
       lsbAnalysis: Steg.analyzeLSB(pixels),
-      histogram: ImgProc.generateHistogram(pixels),
+      histogram: histogram,
+      histogramAnalysis: ImgProc.analyzeHistogramAnomalies(histogram),
       metadata: await this.extractMetadata(),
       entropy: Steg.calculateEntropy(pixels),
       chiSquare: Steg.chiSquareTest(pixels),
-      visualPatterns: ImgProc.detectVisualPatterns(pixels)
+      visualPatterns: ImgProc.detectVisualPatterns(pixels),
+      samplePairAnalysis: Steg.samplePairAnalysis(pixels),
+      bitPlanes: Steg.bitPlaneAnalysis(pixels),
+      colorClustering: Steg.detectColorClustering(pixels)
     };
   }
 

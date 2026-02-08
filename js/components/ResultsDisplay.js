@@ -81,6 +81,22 @@ export default class ResultsDisplay {
             <span class="metric-label">Chi-Square <button class="info-btn" data-key="chiSquare">?</button></span>
             <span class="metric-value ${this.getChiStatus(result.chiSquare)}">${result.chiSquare.toFixed(2)}</span>
           </div>
+          <div class="metric">
+            <span class="metric-label">Sample Pair Analysis <button class="info-btn" data-key="samplePairAnalysis">?</button></span>
+            <span class="metric-value ${this.getSPAStatus(result.samplePairAnalysis)}">${(result.samplePairAnalysis * 100).toFixed(2)}%</span>
+          </div>
+        </div>
+
+        <div class="analysis-card">
+          <div class="analysis-card-title">Advanced Detection</div>
+          <div class="metric">
+            <span class="metric-label">Bit Plane Anomaly <button class="info-btn" data-key="bitPlaneAnalysis">?</button></span>
+            <span class="metric-value ${this.getBitPlaneStatus(result.bitPlanes.suspiciousRatio)}">${result.bitPlanes.suspiciousRatio.toFixed(3)}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Color Clustering <button class="info-btn" data-key="colorClustering">?</button></span>
+            <span class="metric-value ${result.colorClustering.isUnusual ? 'suspicious' : 'normal'}">${result.colorClustering.isUnusual ? 'Unusual' : 'Normal'}</span>
+          </div>
         </div>
 
         <div class="analysis-card">
@@ -88,9 +104,44 @@ export default class ResultsDisplay {
           <div class="histogram-wrapper">
             <canvas id="histogram-${i}" width="300" height="150"></canvas>
           </div>
+          ${this.renderHistogramFindings(result.histogramAnalysis)}
         </div>
       </div>
     `;
+  }
+
+  renderHistogramFindings(analysis) {
+    if (!analysis.hasAnomalies) {
+      return '<div class="histogram-findings">No significant anomalies detected.</div>';
+    }
+    
+    const findings = [];
+    
+    analysis.anomalies.forEach(anomaly => {
+      if (anomaly.type === 'peaks') {
+        findings.push(`<div class="finding">⚠ Multiple sharp peaks in ${anomaly.data[0].channel} channel</div>`);
+      } else if (anomaly.type === 'gaps') {
+        anomaly.data.forEach(gap => {
+          findings.push(`<div class="finding">⚠ Distribution gap in ${gap.channel} (${gap.start}-${gap.end})</div>`);
+        });
+      } else if (anomaly.type === 'smoothness') {
+        findings.push(`<div class="finding">⚠ Unusual smoothness in ${anomaly.data.channel} channel</div>`);
+      }
+    });
+    
+    return `<div class="histogram-findings">${findings.join('')}</div>`;
+  }
+
+  getSPAStatus(value) {
+    if (value > 0.3) return 'suspicious';
+    if (value > 0.15) return 'warning';
+    return 'normal';
+  }
+
+  getBitPlaneStatus(value) {
+    if (value > 1.5) return 'suspicious';
+    if (value > 1.2) return 'warning';
+    return 'normal';
   }
 
   getStatus(value) {
@@ -132,6 +183,23 @@ export default class ResultsDisplay {
       const barWidth = width / 256;
 
       ctx.clearRect(0, 0, width, height);
+
+      // Highlight anomalies if present
+      if (result.histogramAnalysis.hasAnomalies) {
+        result.histogramAnalysis.anomalies.forEach(anomaly => {
+          if (anomaly.type === 'peaks') {
+            anomaly.data.forEach(peak => {
+              ctx.fillStyle = peak.color + '33';
+              ctx.fillRect(peak.value * barWidth - 5, 0, 10, height);
+            });
+          } else if (anomaly.type === 'gaps') {
+            anomaly.data.forEach(gap => {
+              ctx.fillStyle = '#ffffff11';
+              ctx.fillRect(gap.start * barWidth, 0, (gap.end - gap.start) * barWidth, height);
+            });
+          }
+        });
+      }
 
       const drawPath = (data, color) => {
         ctx.beginPath();

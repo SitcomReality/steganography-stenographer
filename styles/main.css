@@ -235,6 +235,19 @@ canvas {
   opacity: 0.6;
 }
 
+.histogram-findings {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #222;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.finding {
+  padding: 0.25rem 0;
+  opacity: 0.8;
+}
+
 .hidden {
   display: none;
 }

@@ -79,6 +79,101 @@ export function chiSquareTest(imageData) {
   return 1 - pValue;
 }
 
+export function samplePairAnalysis(imageData) {
+  // Sample Pair Analysis (SPA): Advanced LSB detection technique
+  // Analyzes pairs of pixel values to detect LSB embedding
+  const data = imageData.data;
+  let u = 0, v = 0, w = 0, x = 0, y = 0, z = 0;
+  
+  for (let i = 0; i < data.length - 8; i += 8) {
+    const p1 = data[i];
+    const p2 = data[i + 4];
+    
+    if (p1 === p2) {
+      if (p1 % 2 === 0) u++;
+      else v++;
+    } else if (p1 === p2 + 1) {
+      w++;
+    } else if (p1 === p2 - 1) {
+      x++;
+    } else if (p1 > p2) {
+      y++;
+    } else {
+      z++;
+    }
+  }
+  
+  const total = u + v + w + x + y + z;
+  if (total === 0) return 0;
+  
+  // Calculate embedding ratio estimate
+  const a = 2 * (w + x);
+  const b = u + v + y + z;
+  const ratio = a / (a + b);
+  
+  return Math.min(1, ratio);
+}
+
+export function bitPlaneAnalysis(imageData) {
+  // Analyze all 8 bit planes, not just LSB
+  const data = imageData.data;
+  const planeComplexity = new Array(8).fill(0);
+  
+  for (let plane = 0; plane < 8; plane++) {
+    let transitions = 0;
+    let lastBit = null;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const bit = (data[i] >> plane) & 1;
+      if (lastBit !== null && bit !== lastBit) {
+        transitions++;
+      }
+      lastBit = bit;
+    }
+    
+    planeComplexity[plane] = transitions / (data.length / 4);
+  }
+  
+  // LSB should be most random in natural images
+  // If higher planes are more random than LSB, suspicious
+  const lsbComplexity = planeComplexity[0];
+  const higherAvg = planeComplexity.slice(1, 4).reduce((a, b) => a + b) / 3;
+  
+  return {
+    planes: planeComplexity,
+    suspiciousRatio: higherAvg > lsbComplexity ? higherAvg / lsbComplexity : 0
+  };
+}
+
+export function detectColorClustering(imageData) {
+  // Detect unusual color clustering that might indicate steganography
+  const data = imageData.data;
+  const buckets = new Array(64).fill(0); // 4x4x4 color space buckets
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const r = Math.floor(data[i] / 64);
+    const g = Math.floor(data[i + 1] / 64);
+    const b = Math.floor(data[i + 2] / 64);
+    const idx = r * 16 + g * 4 + b;
+    buckets[idx]++;
+  }
+  
+  // Calculate variance of bucket distribution
+  const total = data.length / 4;
+  const expected = total / 64;
+  const variance = buckets.reduce((sum, count) => {
+    return sum + Math.pow(count - expected, 2);
+  }, 0) / 64;
+  
+  // High variance indicates clustering
+  const normalizedVariance = variance / (total * total);
+  
+  return {
+    variance: normalizedVariance,
+    isUnusual: normalizedVariance > 0.001
+  };
+}
+
 export function extractLSBPlane(imageData, channel) {
   const canvas = document.createElement('canvas');
   canvas.width = imageData.width;
